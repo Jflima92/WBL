@@ -59,18 +59,11 @@ public class Server {
                 }
                 if (key.isReadable()) {
                     System.out.println("Readable");
-                   /* String ret = readMessage(key);
-                    if (ret.length() > 0) {
-                        writeMessage(socket, ret);
-                    }*/
+
                 }
                 if (key.isWritable()) {
                     System.out.println("Writable");
-                    /*String ret = readMessage(key);
-                    socket = (SocketChannel) key.channel();
-                    if (result.length() > 0) {
-                        writeMessage(socket, ret);
-                    }*/
+
                 }
             }
         }
