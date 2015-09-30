@@ -1,4 +1,4 @@
-package server;
+package chatter.server;
 
 import java.io.*;
 import java.net.*;

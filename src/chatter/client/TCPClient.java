@@ -1,4 +1,4 @@
-package client;
+package chatter.client;
 
 import java.awt.image.BufferedImage;
 import java.io.*;
@@ -13,8 +13,8 @@ class TCPClient {
 	public static void main(String argv[]) throws Exception {
 
 		if (argv.length < 2) {
-			System.out.println("USAGE:  java TCPClient <port> msg <message>");
-			System.out.println("		java TCPClient <port> img <img_url>");
+			System.out.println("USAGE:  java chatter.client.TCPClient <port> msg <message>");
+			System.out.println("		java chatter.client.TCPClient <port> img <img_url>");
 			System.exit(-1);
 		}
 
@@ -37,7 +37,8 @@ class TCPClient {
 					message += " " + argv[i];
 				}
 				outToServer.writeBytes(message);
-			} else if(action.equals("img")) {
+			}
+			else if(action.equals("img")) {
 				
 				// Get image's location
 				String location = argv[2];
@@ -62,6 +63,7 @@ class TCPClient {
 		        System.out.println("Closing: " + System.currentTimeMillis());
 
 			}
+
 			// End connection
 			clientSocket.close();
 		}
