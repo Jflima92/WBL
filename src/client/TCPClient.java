@@ -1,4 +1,4 @@
-package mainPkg;
+package client;
 
 import java.awt.image.BufferedImage;
 import java.io.*;

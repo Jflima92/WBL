@@ -1,4 +1,4 @@
-package mainPkg;
+package server;
 
 import java.io.*;
 import java.net.*;
