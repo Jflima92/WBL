@@ -1,12 +1,15 @@
 package chatter.server;
 
+import java.io.File;
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.nio.channels.SelectionKey;
-import java.nio.channels.Selector;
-import java.nio.channels.ServerSocketChannel;
-import java.nio.channels.SocketChannel;
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
+import java.nio.channels.*;
+import java.nio.charset.Charset;
+import java.nio.charset.CharsetDecoder;
 import java.util.Iterator;
 import java.util.Set;
 
@@ -63,6 +66,8 @@ public class Server {
                 }
                 if (key.isWritable()) {
                     System.out.println("Writable");
+                    String msg = "TESTE";
+                    writeMessage(socket, msg);
 
                 }
             }
@@ -79,4 +84,35 @@ public class Server {
         }
 
     }
+
+    public void writeMessage(SocketChannel socket, String ret) {
+        System.out.println("Inside the loop");
+
+        if (ret.equals("quit") || ret.equals("shutdown")) {
+            return;
+        }
+       // File file = new File(ret);
+        try {
+
+           // RandomAccessFile rdm = new RandomAccessFile(file, "r");
+           // FileChannel fc = rdm.getChannel();
+            ByteBuffer buffer = ByteBuffer.allocate(1024);
+            buffer.put(ret.getBytes());
+            buffer.flip();
+
+            Charset set = Charset.forName("UTF-8");
+            CharsetDecoder dec = set.newDecoder();
+            CharBuffer charBuf = dec.decode(buffer);
+            System.out.println(charBuf.toString());
+            buffer = ByteBuffer.wrap((charBuf.toString()).getBytes());
+            int nBytes = socket.write(buffer);
+            System.out.println("nBytes = " + nBytes);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }
 }
+
+

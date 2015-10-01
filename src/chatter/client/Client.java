@@ -25,16 +25,25 @@ public class Client {
     }
 
     public void connectToServer(){
-
+        int result = 0;
         try{
             clientSocket = SocketChannel.open();
             isa = new InetSocketAddress(address,port);
             clientSocket.connect(isa);
             clientSocket.configureBlocking(false);
             System.out.println("Connected to the Server");
+
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        try {
+            clientSocket.close();
+            System.exit(0);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
     }
 
 }
