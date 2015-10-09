@@ -10,6 +10,7 @@ import java.nio.CharBuffer;
 import java.nio.channels.*;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Set;
 
@@ -19,12 +20,14 @@ import java.util.Set;
 public class Server {
 
     private Selector selector = null;
+    public ArrayList<SocketChannel> clients;
     private ServerSocketChannel serverSocket = null;
     private SocketChannel socket = null;
     private int port = 1818;
 
     public Server(){
         System.out.println("Server online");
+        clients = new ArrayList<>();
     }
     public Server(int port){
         this.port = port;
@@ -62,6 +65,7 @@ public class Server {
                     socket = (SocketChannel) ssc.accept();
                     socket.configureBlocking(false);
                     SelectionKey another = socket.register(selector, SelectionKey.OP_READ | SelectionKey.OP_WRITE);
+                    clients.add(socket);
                 }
                 if (key.isReadable()) {
                     //System.out.println("Readable");
@@ -75,8 +79,12 @@ public class Server {
                     //System.out.println("Writable");
                     String msg = "TESTE";
                     if(broadcast) {
-                        System.out.println(rec);
-                        writeMessage(socket, rec);
+                        System.out.println(clients.toArray());
+                        for(SocketChannel cli : clients){
+
+                            writeMessage(cli, rec);
+                        }
+
                         broadcast = false;
                     }
 

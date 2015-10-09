@@ -18,7 +18,7 @@ public class Client {
 
     private int port;
     private String address;
-    private SocketChannel clientSocket;
+    public SocketChannel clientSocket;
     private InetSocketAddress isa;
     public receivingThread receiving = null;
 
