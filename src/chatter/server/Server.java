@@ -44,6 +44,9 @@ public class Server {
         initializeServer();
         SelectionKey acceptKey = serverSocket.register(selector, SelectionKey.OP_ACCEPT);
 
+        Boolean broadcast = false;
+        String rec = null;
+
         while (acceptKey.selector().select() > 0) {
 
             Set readyKeys = selector.selectedKeys();
@@ -61,13 +64,21 @@ public class Server {
                     SelectionKey another = socket.register(selector, SelectionKey.OP_READ | SelectionKey.OP_WRITE);
                 }
                 if (key.isReadable()) {
-                    System.out.println("Readable");
+                    //System.out.println("Readable");
+                    String received = readMessage(key);
+                    rec = received;
+                    System.out.println("received: " + received);
+                    broadcast = true;
 
                 }
                 if (key.isWritable()) {
-                    System.out.println("Writable");
+                    //System.out.println("Writable");
                     String msg = "TESTE";
-                    writeMessage(socket, msg);
+                    if(broadcast) {
+                        System.out.println(rec);
+                        writeMessage(socket, rec);
+                        broadcast = false;
+                    }
 
                 }
             }
@@ -112,6 +123,26 @@ public class Server {
             e.printStackTrace();
         }
 
+    }
+
+    public String readMessage(SelectionKey key){
+        int nBytes = 0;
+        socket = (SocketChannel) key.channel();
+        ByteBuffer buffer = ByteBuffer.allocate(1024);
+        String result = null;
+
+        try{
+            nBytes = socket.read(buffer);
+            buffer.flip();
+            Charset charset = Charset.forName("UTF-8");
+            CharsetDecoder decoder = charset.newDecoder();
+            CharBuffer charBuffer = decoder.decode(buffer);
+            result = charBuffer.toString();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return result;
     }
 }
 

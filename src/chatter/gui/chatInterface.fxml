@@ -7,7 +7,7 @@
 
 <Pane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8.0.40" xmlns:fx="http://javafx.com/fxml/1" fx:controller="chatter.gui.chatController">
    <children>
-      <TextField layoutX="5.0" layoutY="346.0" prefHeight="40.0" prefWidth="484.0" promptText="Write your message here!" />
+      <TextField fx:id="textBox" layoutX="5.0" layoutY="346.0" prefHeight="40.0" prefWidth="484.0" promptText="Write your message here!" />
       <Button fx:id="sendMessageButton" layoutX="508.0" layoutY="353.0" mnemonicParsing="false" prefHeight="26.0" prefWidth="70.0" text="Send" />
       <TitledPane animated="false" collapsible="false" expanded="false" layoutX="356.0" layoutY="45.0" prefHeight="267.0" prefWidth="230.0" style="-fx-background-color: #d3d3d3;" text="Online Members" />
       <TabPane layoutX="14.0" layoutY="45.0" prefHeight="267.0" prefWidth="330.0" style="-fx-background-color: #696969;" tabClosingPolicy="UNAVAILABLE">

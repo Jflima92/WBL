@@ -3,10 +3,13 @@ package chatter.gui; /**
  */
 
 import javafx.application.Application;
+import javafx.application.Platform;
+import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
+import javafx.stage.WindowEvent;
 
 public class chatInterface extends Application {
 
@@ -23,5 +26,21 @@ public class chatInterface extends Application {
         Parent root = FXMLLoader.load(getClass().getResource("chatInterface.fxml"));
         primaryStage.setScene(new Scene(root, 600, 400));
         primaryStage.show();
+
+        primaryStage.setOnCloseRequest(new EventHandler<WindowEvent>()  //
+        {
+            public void handle(WindowEvent e){              //TODO fix issue of disconnecting socket on window close
+                System.out.println("test");
+                try {
+                    Platform.exit();
+                    System.exit(0);
+                }
+                catch (Exception e1) {
+                    e1.printStackTrace();
+                }
+            }
+        });
+
+
     }
 }
