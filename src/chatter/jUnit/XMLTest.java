@@ -1,6 +1,6 @@
-package jUnit;
+package chatter.jUnit;
 
-import xmlParser.*;
+import chatter.xmlParser.*;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
@@ -8,7 +8,7 @@ public class XMLTest {
 
 	@Test // Test the creation of an xml file
 	public void testCreateFile() {
-		Auxiliar.deleteTestFile();
+		chatter.jUnit.Auxiliar.deleteTestFile();
 		CreateXMLFile.create("users_test.xml");
 		assertEquals(CheckXMLFile.checkFileExists("users_test.xml"), true);
 	}

@@ -1,4 +1,4 @@
-package xmlParser;
+package chatter.xmlParser;
 
 public class User {
 

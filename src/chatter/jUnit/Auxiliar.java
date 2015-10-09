@@ -1,4 +1,4 @@
-package jUnit;
+package chatter.jUnit;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;

@@ -1,4 +1,4 @@
-package xmlParser;
+package chatter.xmlParser;
 
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.DocumentBuilder;
