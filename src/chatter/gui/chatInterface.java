@@ -23,15 +23,21 @@ public class chatInterface extends Application {
     public void start(Stage primaryStage) throws Exception {
         this.primaryStage = primaryStage;
         this.primaryStage.setTitle("Chatter");
-        Parent root = FXMLLoader.load(getClass().getResource("chatInterface.fxml"));
+
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("chatInterface.fxml"));
+        Parent root = (Parent)loader.load();
+        chatController controller = (chatController)loader.getController();
+
         primaryStage.setScene(new Scene(root, 600, 400));
         primaryStage.show();
+
+        controller.setStage(this.primaryStage);
 
         primaryStage.setOnCloseRequest(new EventHandler<WindowEvent>()  //
         {
             public void handle(WindowEvent e){              //TODO fix issue of disconnecting socket on window close
-                System.out.println("test");
                 try {
+                    controller.disconnect();
                     Platform.exit();
                     System.exit(0);
                 }

@@ -48,6 +48,7 @@ public class Server {
         SelectionKey acceptKey = serverSocket.register(selector, SelectionKey.OP_ACCEPT);
 
         Boolean broadcast = false;
+        Boolean newClient = false;
         String rec = null;
 
         while (acceptKey.selector().select() > 0) {
@@ -58,38 +59,53 @@ public class Server {
             while (it.hasNext()) {
                 SelectionKey key = (SelectionKey) it.next();
                 it.remove();
+                try {
+                    if (key.isAcceptable()) {
+                        System.out.println("Acceptable");
+                        ServerSocketChannel ssc = (ServerSocketChannel) key.channel();
+                        socket = (SocketChannel) ssc.accept();
+                        socket.configureBlocking(false);
+                        SelectionKey another = socket.register(selector, SelectionKey.OP_READ | SelectionKey.OP_WRITE);
+                        clients.add(socket);
+                        newClient = true;  //TODO alert system and client when new client connects to be printed in the gui
 
-                if (key.isAcceptable()) {
-                    System.out.println("Acceptable");
-                    ServerSocketChannel ssc = (ServerSocketChannel) key.channel();
-                    socket = (SocketChannel) ssc.accept();
-                    socket.configureBlocking(false);
-                    SelectionKey another = socket.register(selector, SelectionKey.OP_READ | SelectionKey.OP_WRITE);
-                    clients.add(socket);
-                }
-                if (key.isReadable()) {
-                    //System.out.println("Readable");
-                    String received = readMessage(key);
-                    rec = received;
-                    System.out.println("received: " + received);
-                    broadcast = true;
+                    }
+                    if (key.isReadable() & key.isValid()) {
+                        //System.out.println("Readable");
+                        String received = readMessage(key);
+                        rec = received;
 
-                }
-                if (key.isWritable()) {
-                    //System.out.println("Writable");
-                    String msg = "TESTE";
-                    if(broadcast) {
-                        System.out.println(clients.toArray());
-                        for(SocketChannel cli : clients){
-
-                            writeMessage(cli, rec);
+                        if (received.toString() == "noconn") {
+                            System.out.println("Client disconnected");
+                        } else {
+                            System.out.println("received: " + received.toString());
+                            broadcast = true;
                         }
 
-                        broadcast = false;
                     }
+                    if (key.isWritable() & key.isValid()) {
+                        //System.out.println("Writable");
 
+                        if(newClient){
+
+                        }
+
+                        if (broadcast) {
+
+                            for (SocketChannel cli : clients) {
+                                System.out.println("Writing to clients address: " + cli.getRemoteAddress());
+                                writeMessage(cli, rec);
+                            }
+
+                            broadcast = false;
+                        }
+
+                    }
+                } catch(CancelledKeyException e) {
+                    key.channel().close();
                 }
             }
+
         }
     }
 
@@ -110,11 +126,11 @@ public class Server {
         if (ret.equals("quit") || ret.equals("shutdown")) {
             return;
         }
-       // File file = new File(ret);
+        // File file = new File(ret);
         try {
 
-           // RandomAccessFile rdm = new RandomAccessFile(file, "r");
-           // FileChannel fc = rdm.getChannel();
+            // RandomAccessFile rdm = new RandomAccessFile(file, "r");
+            // FileChannel fc = rdm.getChannel();
             ByteBuffer buffer = ByteBuffer.allocate(1024);
             buffer.put(ret.getBytes());
             buffer.flip();
@@ -127,9 +143,10 @@ public class Server {
             int nBytes = socket.write(buffer);
             System.out.println("nBytes = " + nBytes);
 
+        } catch (ClosedChannelException cce) {
         } catch (Exception e) {
             e.printStackTrace();
-        }
+        } 
 
     }
 
@@ -141,6 +158,11 @@ public class Server {
 
         try{
             nBytes = socket.read(buffer);
+            if(nBytes == -1){
+                key.cancel();
+                clients.remove(socket);
+                return "noconn";
+            }
             buffer.flip();
             Charset charset = Charset.forName("UTF-8");
             CharsetDecoder decoder = charset.newDecoder();

@@ -7,7 +7,9 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
+import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
+import java.nio.channels.spi.SelectorProvider;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
 
@@ -26,6 +28,12 @@ public class Client {
     public Client(int port, String address){
         this.address = address;
         this.port = port;
+
+    }
+
+    private Selector initSelector() throws IOException {
+        // Create a new selector
+        return SelectorProvider.provider().openSelector();
     }
 
     public void connectToServer(){
@@ -73,8 +81,8 @@ public class Client {
     }
 
     public void shutdown(){
+
         try {
-            receiving.active = false;
             clientSocket.close();
         } catch (IOException e) {
             e.printStackTrace();

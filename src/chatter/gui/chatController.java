@@ -19,10 +19,14 @@ import java.nio.CharBuffer;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.ResourceBundle;
 import java.util.concurrent.RunnableFuture;
 
 import chatter.client.Client;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
@@ -36,14 +40,20 @@ import javafx.stage.WindowEvent;
  */
 public class chatController implements Initializable {
 
-
+    @FXML
+    private Stage mainStage;
     @FXML //  fx:id="myButton"
     private Button sendMessageButton; // Value injected by FXMLLoader
     @FXML
     private TextField textBox;
 
     @FXML
+    private VBox genVBox;
+
+    @FXML
     private Tab genTab;
+
+
 
 
     private int port = 1818;
@@ -57,10 +67,12 @@ public class chatController implements Initializable {
         assert sendMessageButton != null : "fx:id=\"sendMessageButton\" was not injected: check your FXML file 'chatInterface'.";
 
 
+
         client = new Client(port, "127.0.1.1");
         client.connectToServer();
         System.out.println(port);
         receiveMessage();
+
 
 
         /*stage.setOnCloseRequest(new EventHandler<WindowEvent>() {  //TODO close all connections on window close
@@ -75,6 +87,16 @@ public class chatController implements Initializable {
         // initialize your logic here: all @FXML variables will have been injected
         sendMessageButton.setOnAction(this::handleButtonAction);
 
+    }
+
+    public void setStage(Stage stage)
+    {
+        this.mainStage = stage;
+    }
+
+    public void disconnect() {
+        this.active = false;
+        client.shutdown();
     }
 
     public void receiveMessage(){
@@ -96,10 +118,14 @@ public class chatController implements Initializable {
                             CharBuffer charBuffer = decoder.decode(buffer);
                             String result = charBuffer.toString();
                             System.out.println("recebi aqui:" + result);
+                            Date date = new Date();
+                            SimpleDateFormat df = new SimpleDateFormat("hh:mm:ss");
+                            String prep = df.format(date) + ": " + result;
+
                             Platform.runLater(new Runnable(){
                                 @Override
                                 public void run() {
-                                    genTab.setContent(new Text(result));
+                                    genVBox.getChildren().add(new Text(prep));
                                 }
                             });
                             buffer.flip();
@@ -151,8 +177,10 @@ public class chatController implements Initializable {
                         CharsetDecoder decoder = charset.newDecoder();
                         CharBuffer charBuffer = decoder.decode(buffer);
                         String result = charBuffer.toString();
+                        System.out.println("fodasse");
                         System.out.println("recebi aqui:" + result);
-                        genTab.setContent(new Text(result));
+
+
                         buffer.flip();
                     }
                 }
