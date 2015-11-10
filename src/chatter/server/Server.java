@@ -10,9 +10,7 @@ import java.nio.CharBuffer;
 import java.nio.channels.*;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Created by jorgelima on 9/30/15.
@@ -24,10 +22,12 @@ public class Server {
     private ServerSocketChannel serverSocket = null;
     private SocketChannel socket = null;
     private int port = 1818;
+    private HashMap<SocketChannel, String> clientsNames;
 
     public Server(){
         System.out.println("Server online");
         clients = new ArrayList<>();
+        clientsNames = new HashMap<>();
     }
     public Server(int port){
         this.port = port;
@@ -67,6 +67,7 @@ public class Server {
                         socket.configureBlocking(false);
                         SelectionKey another = socket.register(selector, SelectionKey.OP_READ | SelectionKey.OP_WRITE);
                         clients.add(socket);
+                        clientsNames.put(socket, getRandomUserName());
                         newClient = true;  //TODO alert system and client when new client connects to be printed in the gui
 
                     }
@@ -173,6 +174,13 @@ public class Server {
         }
 
         return result;
+    }
+
+    public String getRandomUserName(){
+        String s;
+        s = "anon";
+        String ID = UUID.randomUUID().toString().replaceAll("[\\s\\-()]", "");
+        return s+ID.substring(1, 15);
     }
 }
 
