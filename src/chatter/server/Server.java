@@ -67,18 +67,22 @@ public class Server {
                         socket.configureBlocking(false);
                         SelectionKey another = socket.register(selector, SelectionKey.OP_READ | SelectionKey.OP_WRITE);
                         clients.add(socket);
-                        clientsNames.put(socket, getRandomUserName());
                         newClient = true;  //TODO alert system and client when new client connects to be printed in the gui
 
                     }
                     if (key.isReadable() & key.isValid()) {
                         //System.out.println("Readable");
                         String received = readMessage(key);
+
                         rec = received;
 
                         if (received.toString() == "noconn") {
                             System.out.println("Client disconnected");
-                        } else {
+                        } else if(received.toString().split("\\s+")[0].equals("joining")) {
+                            clientsNames.put((SocketChannel) key.channel(), received.toString().split("\\s+")[1]);
+                            System.out.println("newClient: " + clientsNames.get((SocketChannel) key.channel()));
+                        } else
+                        {
                             System.out.println("received: " + received.toString());
                             broadcast = true;
                         }
@@ -94,8 +98,10 @@ public class Server {
                         if (broadcast) {
 
                             for (SocketChannel cli : clients) {
+                                String client = clientsNames.get((SocketChannel) key.channel());
+                                String toSend = client + ": " + rec;
                                 System.out.println("Writing to clients address: " + cli.getRemoteAddress());
-                                writeMessage(cli, rec);
+                                writeMessage(cli, toSend);
                             }
 
                             broadcast = false;
@@ -147,7 +153,7 @@ public class Server {
         } catch (ClosedChannelException cce) {
         } catch (Exception e) {
             e.printStackTrace();
-        } 
+        }
 
     }
 

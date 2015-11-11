@@ -22,11 +22,14 @@ import java.nio.charset.CharsetDecoder;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.ResourceBundle;
+import java.util.UUID;
 import java.util.concurrent.RunnableFuture;
 
 import chatter.client.Client;
+import javafx.scene.control.TitledPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
@@ -53,10 +56,14 @@ public class chatController implements Initializable {
     @FXML
     private Tab genTab;
 
+    @FXML
+    private VBox onlineMembers;
+
 
     private int port = 1818;
     private Client client;
     public boolean active = true;
+    private String userName = null;
 
 
     @Override // This method is called by the FXMLLoader when initialization is complete
@@ -66,6 +73,18 @@ public class chatController implements Initializable {
         client = new Client(port, "127.0.1.1");
         client.connectToServer();
         System.out.println(port);
+        userName = getRandomUserName();
+        String join = "joining " + userName;
+        client.writeMessage(join);
+        Platform.runLater(new Runnable(){
+            @Override
+            public void run() {
+                Text t;
+                t = new Text(userName);
+                t.setFill(Color.RED);
+                onlineMembers.getChildren().add(t);
+            }
+        });
         receiveMessage();
 
         // initialize your logic here: all @FXML variables will have been injected
@@ -104,12 +123,15 @@ public class chatController implements Initializable {
                             System.out.println("recebi aqui:" + result);
                             Date date = new Date();
                             SimpleDateFormat df = new SimpleDateFormat("hh:mm:ss");
-                            String prep = df.format(date) + ": " + result;
+                            String prep = "["+ df.format(date) + "] " + result;
 
                             Platform.runLater(new Runnable(){
                                 @Override
                                 public void run() {
-                                    genVBox.getChildren().add(new Text(prep));
+                                    Text t;
+                                    t = new Text(prep);
+                                    t.setFill(Color.WHITE);
+                                    genVBox.getChildren().add(t);
                                 }
                             });
                             
@@ -182,6 +204,13 @@ public class chatController implements Initializable {
         t.setWrappingWidth(200);
         t.setTextAlignment(TextAlignment.JUSTIFY);
         t.setText(msg);
+    }
+
+    public String getRandomUserName(){
+        String s;
+        s = "Anon";
+        String ID = UUID.randomUUID().toString().replaceAll("[\\s\\-()]", "");
+        return s+ID.substring(3, 10);
     }
 
 }

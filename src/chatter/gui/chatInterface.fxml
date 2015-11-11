@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.geometry.*?>
 <?import javafx.scene.text.*?>
 <?import javafx.scene.control.*?>
 <?import java.lang.*?>
@@ -9,12 +10,11 @@
    <children>
       <TextField fx:id="textBox" layoutX="5.0" layoutY="346.0" prefHeight="40.0" prefWidth="484.0" promptText="Write your message here!" />
       <Button fx:id="sendMessageButton" layoutX="508.0" layoutY="353.0" mnemonicParsing="false" prefHeight="26.0" prefWidth="70.0" text="Send" />
-      <TitledPane animated="false" collapsible="false" expanded="false" layoutX="356.0" layoutY="45.0" prefHeight="267.0" prefWidth="230.0" style="-fx-background-color: #d3d3d3;" text="Online Members" />
-      <TabPane layoutX="14.0" layoutY="45.0" prefHeight="267.0" prefWidth="330.0" style="-fx-background-color: #696969;" tabClosingPolicy="UNAVAILABLE">
+      <TabPane layoutX="14.0" layoutY="45.0" prefHeight="267.0" prefWidth="386.0" style="-fx-background-color: #696969;" tabClosingPolicy="UNAVAILABLE">
         <tabs>
           <Tab fx:id="genTab" text="General">
                <content>
-                  <VBox fx:id="genVBox" prefHeight="200.0" prefWidth="100.0" />
+                  <VBox fx:id="genVBox" prefHeight="234.0" prefWidth="372.0" />
                </content></Tab>
           <Tab text="Random" />
         </tabs>
@@ -38,5 +38,10 @@
           </Menu>
         </menus>
       </MenuBar>
+      <TitledPane animated="false" collapsible="false" layoutX="415.0" layoutY="46.0" prefHeight="267.0" prefWidth="164.0" text="Online Members">
+         <content>
+            <VBox fx:id="onlineMembers" prefHeight="200.0" prefWidth="100.0" />
+         </content>
+      </TitledPane>
    </children>
 </Pane>
