@@ -13,9 +13,7 @@ public class CheckXMLFile {
 
 	public static boolean checkFileExists(String file_name) {
 		File f = new File(file_name);
-		if (f.exists())
-			return true;
-		return false;
+		return f.exists();
 	}
 
 	public static boolean userExists(String filename, String usernameArg) {

@@ -1,24 +1,24 @@
 package chatter.gui;
 
-import com.sun.javafx.tk.PlatformImage;
+import chatter.client.Client;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.Parent;
 import javafx.scene.control.Button;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TextField;
+import javafx.scene.input.KeyCode;
+import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
+import javafx.scene.text.Text;
+import javafx.stage.Stage;
 
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.URL;
-import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
-import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
 import java.text.SimpleDateFormat;
@@ -26,21 +26,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.ResourceBundle;
 import java.util.UUID;
-import java.util.concurrent.RunnableFuture;
-
-import chatter.client.Client;
-import javafx.scene.control.TitledPane;
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyEvent;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
-import javafx.scene.text.Font;
-import javafx.scene.text.Text;
-import javafx.scene.text.TextAlignment;
-import javafx.stage.Stage;
-import javafx.stage.Window;
-import javafx.stage.WindowEvent;
 
 
 /**
@@ -80,7 +65,6 @@ public class chatController implements Initializable {
         client = new Client(port, "192.168.1.229");
 
         client.connectToServer();
-        System.out.println(port);
         userName = getRandomUserName();
         userList = new ArrayList<>();
         String join = "joining " + userName;
@@ -116,42 +100,53 @@ public class chatController implements Initializable {
     }
 
     public void addNewUser(String name, Boolean own){
-        Platform.runLater(new Runnable(){
-            @Override
-            public void run() {
-                Text t;
-                t = new Text(name);
-                if(own)
-                    t.setFill(Color.RED);
-                else
-                    t.setFill(Color.BLACK);
-                onlineMembers.getChildren().add(t);
+        Platform.runLater(() -> {
+            Text t;
+            t = new Text(name);
+            if(own)
+                t.setFill(Color.RED);
+            else
+                t.setFill(Color.BLACK);
+            onlineMembers.getChildren().add(t);
+        });
+    }
+
+    public void removeUser(String name){
+
+        System.out.println(name);
+        userList.remove(name);
+
+        Platform.runLater(() -> {
+            onlineMembers.getChildren().remove(name);
+            onlineMembers.getChildren().clear();
+            addNewUser(userName, true);
+            for(int i = 0; i < userList.size(); i++){
+                String name1 = userList.get(i);
+                if(!userName.equals(userList.get(i)))
+                    addNewUser(name1, false);
             }
         });
     }
 
-    public void addTextToTab(String text){
+    public void addTextToTab(String text, Boolean admin){
         Date date = new Date();
         SimpleDateFormat df = new SimpleDateFormat("hh:mm:ss");
         String prep = "[" + df.format(date) + "] " + text;
 
-        Platform.runLater(new Runnable() {
-            @Override
-            public void run() {
-                Text t;
-                t = new Text(prep);
-                if(text.split("\\s+")[0].equals(userName+":"))
-                    t.setFill(Color.RED);
-                else
-                    t.setFill(Color.WHITE);
-                genVBox.getChildren().add(t);
-            }
+        Platform.runLater(() -> {
+            Text t;
+            t = new Text(prep);
+            if(text.split("\\s+")[0].equals(userName+":"))
+                t.setFill(Color.RED);
+            else if(admin)
+                t.setFill(Color.DARKORANGE);
+            else
+                t.setFill(Color.WHITE);
+            genVBox.getChildren().add(t);
         });
     }
 
     public void receiveMessage(){
-        //receiving = new receivingThread(client.clientSocket);
-        //Platform.runLater(receiving);
         Task rec = new Task<Void>() {
             @Override
             public Void call() throws IOException {
@@ -168,7 +163,7 @@ public class chatController implements Initializable {
                             CharBuffer charBuffer = decoder.decode(buffer);
                             String result = charBuffer.toString();
                             System.out.println("recebi aqui:" + result);
-                            System.out.printf("tamanho: " + result.split("\\s+").length);
+
                             if (result.split("\\s+")[0].equals("users")) {
                                 for(int i = 1; i < result.split("\\s+").length; i++) {
                                     String name = result.split("\\s+")[i];
@@ -176,13 +171,18 @@ public class chatController implements Initializable {
                                         if (!name.equals(userName)) {
                                             userList.add(name);
                                             addNewUser(name, false);
-                                            addTextToTab("Admin: User " + name + " joined the room.");
+                                            addTextToTab("Admin: User " + name + " joined the room.", true);
                                         }
                                 }
                             }
+                            else if(result.split("\\s+")[0].equals("Admin:") && result.split("\\s+")[4].equals("disconnected.")){
+
+                                addTextToTab(result, true);
+                                removeUser(result.split("\\s+")[2]);
+                            }
 
                             else{
-                                addTextToTab(result);
+                                addTextToTab(result, false);
                             }
                             buffer.flip();
                         }
@@ -203,59 +203,10 @@ public class chatController implements Initializable {
     }
 
     private void handleButtonAction(ActionEvent event) {
-        // Button was clicked, do something...
-        System.out.println("Button Action\n");
         String msg = textBox.getText();
         System.out.println(msg);
         client.writeMessage(msg);
         textBox.clear();
-    }
-
-
-
-
-
-    public class receivingThread implements Runnable {
-        public SocketChannel socket =  null;
-        public boolean active = true;
-
-        public receivingThread(SocketChannel sc){
-
-            this.socket = sc;
-        }
-
-        public void run(){
-            int nBytes = 0;
-
-            ByteBuffer buffer = ByteBuffer.allocate(2048);
-            try{
-                while(active){
-                    while ((nBytes  = client.clientSocket.read(buffer)) > 0){
-                        buffer.flip();
-                        Charset charset = Charset.forName("us-ascii");
-                        CharsetDecoder decoder = charset.newDecoder();
-                        CharBuffer charBuffer = decoder.decode(buffer);
-                        String result = charBuffer.toString();
-                        System.out.println("fodasse");
-                        System.out.println("recebi aqui:" + result);
-
-
-                        buffer.flip();
-                    }
-                }
-
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    public void printToPane(String msg, String user){
-        Text t = new Text();
-        t.setFont(new Font(20));
-        t.setWrappingWidth(200);
-        t.setTextAlignment(TextAlignment.JUSTIFY);
-        t.setText(msg);
     }
 
     public String getRandomUserName(){

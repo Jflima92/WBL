@@ -1,16 +1,20 @@
 package chatter.server;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.channels.*;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Set;
 
 /**
  * Created by jorgelima on 9/30/15.
@@ -40,11 +44,10 @@ public class Server {
         InetAddress ia = InetAddress.getByName("192.168.1.229"); // Currently running on localhost, change later
         InetSocketAddress isa = new InetSocketAddress(ia, port);
         serverSocket.socket().bind(isa);
-        System.out.println(getIpAddress());
         System.out.println("Initialized Server on " + ia);
     }
 
-    public String getIpAddress() throws MalformedURLException, IOException {
+    public String getIpAddress() throws IOException {
         URL myIP = new URL("https://api.ipify.org?format=text");
         BufferedReader in = new BufferedReader(
                 new InputStreamReader(myIP.openStream())
@@ -72,11 +75,10 @@ public class Server {
                     if (key.isAcceptable()) {
                         System.out.println("Acceptable");
                         ServerSocketChannel ssc = (ServerSocketChannel) key.channel();
-                        socket = (SocketChannel) ssc.accept();
+                        socket = ssc.accept();
                         socket.configureBlocking(false);
                         SelectionKey another = socket.register(selector, SelectionKey.OP_READ | SelectionKey.OP_WRITE);
                         clients.add(socket);
-                        newClient = true;  //TODO alert system and client when new client connects to be printed in the gui
 
                     }
                     if (key.isReadable() & key.isValid()) {
@@ -85,11 +87,11 @@ public class Server {
                         rec = received;
 
                         if (received.toString() == "noconn") {
-                            System.out.println("Client disconnected");
+                            System.out.println("Client disconnected: " + clientsNames.get(key.channel()));
+                            broadcastMessage(clients, "Admin: User " + clientsNames.get(key.channel()) + " has disconnected.");
+                            clientsNames.remove(key.channel());
                         } else if(received.toString().split("\\s+")[0].equals("joining")) {
                             clientsNames.put((SocketChannel) key.channel(), received.toString().split("\\s+")[1]);
-                            System.out.println("newClient: " + clientsNames.get((SocketChannel) key.channel()));
-                            System.out.println("clients: " + prepareAllUsers(clientsNames, clients));
                             broadcastMessage(clients, prepareAllUsers(clientsNames, clients));
 
                         } else
@@ -102,13 +104,9 @@ public class Server {
                     if (key.isWritable() & key.isValid()) {
                         //System.out.println("Writable");
 
-                        if(newClient){
-
-                        }
-
                         if (broadcast) {
 
-                            String client = clientsNames.get((SocketChannel) key.channel());
+                            String client = clientsNames.get(key.channel());
                             String toSend = client + ": " + rec;
                             broadcastMessage(clients, toSend);
 
@@ -160,16 +158,13 @@ public class Server {
     }
 
     public void writeMessage(SocketChannel socket, String ret) {
-        System.out.println("Inside the loop");
+
 
         if (ret.equals("quit") || ret.equals("shutdown")) {
             return;
         }
-        // File file = new File(ret);
         try {
 
-            // RandomAccessFile rdm = new RandomAccessFile(file, "r");
-            // FileChannel fc = rdm.getChannel();
             ByteBuffer buffer = ByteBuffer.allocate(1024);
             buffer.put(ret.getBytes());
             buffer.flip();
@@ -214,12 +209,6 @@ public class Server {
         return result;
     }
 
-    public String getRandomUserName(){
-        String s;
-        s = "anon";
-        String ID = UUID.randomUUID().toString().replaceAll("[\\s\\-()]", "");
-        return s+ID.substring(1, 15);
-    }
 }
 
 

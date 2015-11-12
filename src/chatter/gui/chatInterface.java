@@ -4,12 +4,10 @@ package chatter.gui; /**
 
 import javafx.application.Application;
 import javafx.application.Platform;
-import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
-import javafx.stage.WindowEvent;
 
 public class chatInterface extends Application {
 
@@ -25,8 +23,8 @@ public class chatInterface extends Application {
         this.primaryStage.setTitle("Chatter");
 
         FXMLLoader loader = new FXMLLoader(getClass().getResource("chatInterface.fxml"));
-        Parent root = (Parent)loader.load();
-        chatController controller = (chatController)loader.getController();
+        Parent root = loader.load();
+        chatController controller = loader.getController();
 
         primaryStage.setScene(new Scene(root, 600, 400));
         primaryStage.show();
