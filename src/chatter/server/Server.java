@@ -1,10 +1,10 @@
 package chatter.server;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.RandomAccessFile;
+import java.io.*;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.channels.*;
@@ -37,10 +37,19 @@ public class Server {
         selector = Selector.open();
         serverSocket = ServerSocketChannel.open();
         serverSocket.configureBlocking(false);
-        InetAddress ia = InetAddress.getLocalHost(); // Currently running on localhost, change later
+        InetAddress ia = InetAddress.getByName("192.168.1.229"); // Currently running on localhost, change later
         InetSocketAddress isa = new InetSocketAddress(ia, port);
         serverSocket.socket().bind(isa);
+        System.out.println(getIpAddress());
         System.out.println("Initialized Server on " + ia);
+    }
+
+    public String getIpAddress() throws MalformedURLException, IOException {
+        URL myIP = new URL("https://api.ipify.org?format=text");
+        BufferedReader in = new BufferedReader(
+                new InputStreamReader(myIP.openStream())
+        );
+        return in.readLine();
     }
 
     public void startServer() throws IOException{
@@ -81,6 +90,9 @@ public class Server {
                         } else if(received.toString().split("\\s+")[0].equals("joining")) {
                             clientsNames.put((SocketChannel) key.channel(), received.toString().split("\\s+")[1]);
                             System.out.println("newClient: " + clientsNames.get((SocketChannel) key.channel()));
+                            System.out.println("clients: " + prepareAllUsers(clientsNames, clients));
+                            broadcastMessage(clients, prepareAllUsers(clientsNames, clients));
+
                         } else
                         {
                             System.out.println("received: " + received.toString());
@@ -97,12 +109,9 @@ public class Server {
 
                         if (broadcast) {
 
-                            for (SocketChannel cli : clients) {
-                                String client = clientsNames.get((SocketChannel) key.channel());
-                                String toSend = client + ": " + rec;
-                                System.out.println("Writing to clients address: " + cli.getRemoteAddress());
-                                writeMessage(cli, toSend);
-                            }
+                            String client = clientsNames.get((SocketChannel) key.channel());
+                            String toSend = client + ": " + rec;
+                            broadcastMessage(clients, toSend);
 
                             broadcast = false;
                         }
@@ -113,6 +122,30 @@ public class Server {
                 }
             }
 
+        }
+    }
+
+    public String prepareAllUsers(HashMap<SocketChannel, String> socketToName, ArrayList<SocketChannel> sockets){
+
+        String users = "users ";
+
+        for (SocketChannel cli : sockets) {
+            users = users + socketToName.get(cli) + " ";
+        }
+        return users;
+    }
+
+    public void broadcastMessage(ArrayList<SocketChannel> sockets, String message){
+
+        for (SocketChannel cli : sockets) {
+
+            try {
+                System.out.println("Writing to clients address: " + cli.getRemoteAddress());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            writeMessage(cli, message);
         }
     }
 

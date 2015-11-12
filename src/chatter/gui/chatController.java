@@ -13,7 +13,9 @@ import javafx.scene.control.Tab;
 import javafx.scene.control.TextField;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.URL;
+import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.channels.SocketChannel;
@@ -27,6 +29,8 @@ import java.util.concurrent.RunnableFuture;
 
 import chatter.client.Client;
 import javafx.scene.control.TitledPane;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
@@ -70,24 +74,29 @@ public class chatController implements Initializable {
     public void initialize(URL fxmlFileLocation, ResourceBundle resources) {
         assert sendMessageButton != null : "fx:id=\"sendMessageButton\" was not injected: check your FXML file 'chatInterface'.";
 
-        client = new Client(port, "127.0.1.1");
+
+        client = new Client(port, "192.168.1.229");
+
         client.connectToServer();
         System.out.println(port);
         userName = getRandomUserName();
         String join = "joining " + userName;
         client.writeMessage(join);
-        Platform.runLater(new Runnable(){
-            @Override
-            public void run() {
-                Text t;
-                t = new Text(userName);
-                t.setFill(Color.RED);
-                onlineMembers.getChildren().add(t);
-            }
-        });
+        addNewUser(userName, true);
         receiveMessage();
 
         // initialize your logic here: all @FXML variables will have been injected
+
+        textBox.setOnKeyPressed(ke -> {
+            if (ke.getCode().equals(KeyCode.ENTER))
+            {
+                String msg = textBox.getText();
+                System.out.println(msg);
+                client.writeMessage(msg);
+                textBox.clear();
+            }
+        });
+
         sendMessageButton.setOnAction(this::handleButtonAction);
 
     }
@@ -100,6 +109,21 @@ public class chatController implements Initializable {
     public void disconnect() {
         this.active = false;
         client.shutdown();
+    }
+
+    public void addNewUser(String name, Boolean own){
+        Platform.runLater(new Runnable(){
+            @Override
+            public void run() {
+                Text t;
+                t = new Text(name);
+                if(own)
+                    t.setFill(Color.RED);
+                else
+                    t.setFill(Color.BLACK);
+                onlineMembers.getChildren().add(t);
+            }
+        });
     }
 
     public void receiveMessage(){
@@ -121,20 +145,34 @@ public class chatController implements Initializable {
                             CharBuffer charBuffer = decoder.decode(buffer);
                             String result = charBuffer.toString();
                             System.out.println("recebi aqui:" + result);
-                            Date date = new Date();
-                            SimpleDateFormat df = new SimpleDateFormat("hh:mm:ss");
-                            String prep = "["+ df.format(date) + "] " + result;
-
-                            Platform.runLater(new Runnable(){
-                                @Override
-                                public void run() {
-                                    Text t;
-                                    t = new Text(prep);
-                                    t.setFill(Color.WHITE);
-                                    genVBox.getChildren().add(t);
+                            System.out.printf("tamanho: " + result.split("\\s+").length);
+                            if (result.split("\\s+")[0].equals("users")) {
+                                for(int i = 1; i < result.split("\\s+").length; i++) {
+                                    String name = result.split("\\s+")[i];
+                                    if (!name.equals(userName))
+                                        addNewUser(name, false);
                                 }
-                            });
-                            
+                            }
+
+                            else{
+
+                                Date date = new Date();
+                                SimpleDateFormat df = new SimpleDateFormat("hh:mm:ss");
+                                String prep = "[" + df.format(date) + "] " + result;
+
+                                Platform.runLater(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        Text t;
+                                        t = new Text(prep);
+                                        if(result.split("\\s+")[0].equals(userName+":"))
+                                            t.setFill(Color.RED);
+                                        else
+                                            t.setFill(Color.WHITE);
+                                        genVBox.getChildren().add(t);
+                                    }
+                                });
+                            }
                             buffer.flip();
                         }
                         buffer.clear();
@@ -159,7 +197,10 @@ public class chatController implements Initializable {
         String msg = textBox.getText();
         System.out.println(msg);
         client.writeMessage(msg);
+        textBox.clear();
     }
+
+
 
 
 

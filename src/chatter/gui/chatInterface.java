@@ -33,17 +33,14 @@ public class chatInterface extends Application {
 
         controller.setStage(this.primaryStage);
 
-        primaryStage.setOnCloseRequest(new EventHandler<WindowEvent>()  //
-        {
-            public void handle(WindowEvent e){              //TODO fix issue of disconnecting socket on window close
-                try {
-                    controller.disconnect();
-                    Platform.exit();
-                    System.exit(0);
-                }
-                catch (Exception e1) {
-                    e1.printStackTrace();
-                }
+        primaryStage.setOnCloseRequest(e -> {              //TODO fix issue of disconnecting socket on window close
+            try {
+                controller.disconnect();
+                Platform.exit();
+                System.exit(0);
+            }
+            catch (Exception e1) {
+                e1.printStackTrace();
             }
         });
 
