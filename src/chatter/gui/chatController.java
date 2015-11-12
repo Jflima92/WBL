@@ -22,6 +22,7 @@ import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.ResourceBundle;
 import java.util.UUID;
@@ -68,6 +69,7 @@ public class chatController implements Initializable {
     private Client client;
     public boolean active = true;
     private String userName = null;
+    private ArrayList<String> userList;
 
 
     @Override // This method is called by the FXMLLoader when initialization is complete
@@ -80,8 +82,10 @@ public class chatController implements Initializable {
         client.connectToServer();
         System.out.println(port);
         userName = getRandomUserName();
+        userList = new ArrayList<>();
         String join = "joining " + userName;
         client.writeMessage(join);
+        userList.add(userName);
         addNewUser(userName, true);
         receiveMessage();
 
@@ -126,6 +130,25 @@ public class chatController implements Initializable {
         });
     }
 
+    public void addTextToTab(String text){
+        Date date = new Date();
+        SimpleDateFormat df = new SimpleDateFormat("hh:mm:ss");
+        String prep = "[" + df.format(date) + "] " + text;
+
+        Platform.runLater(new Runnable() {
+            @Override
+            public void run() {
+                Text t;
+                t = new Text(prep);
+                if(text.split("\\s+")[0].equals(userName+":"))
+                    t.setFill(Color.RED);
+                else
+                    t.setFill(Color.WHITE);
+                genVBox.getChildren().add(t);
+            }
+        });
+    }
+
     public void receiveMessage(){
         //receiving = new receivingThread(client.clientSocket);
         //Platform.runLater(receiving);
@@ -149,29 +172,17 @@ public class chatController implements Initializable {
                             if (result.split("\\s+")[0].equals("users")) {
                                 for(int i = 1; i < result.split("\\s+").length; i++) {
                                     String name = result.split("\\s+")[i];
-                                    if (!name.equals(userName))
-                                        addNewUser(name, false);
+                                    if(!userList.contains(name))
+                                        if (!name.equals(userName)) {
+                                            userList.add(name);
+                                            addNewUser(name, false);
+                                            addTextToTab("Admin: User " + name + " joined the room.");
+                                        }
                                 }
                             }
 
                             else{
-
-                                Date date = new Date();
-                                SimpleDateFormat df = new SimpleDateFormat("hh:mm:ss");
-                                String prep = "[" + df.format(date) + "] " + result;
-
-                                Platform.runLater(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        Text t;
-                                        t = new Text(prep);
-                                        if(result.split("\\s+")[0].equals(userName+":"))
-                                            t.setFill(Color.RED);
-                                        else
-                                            t.setFill(Color.WHITE);
-                                        genVBox.getChildren().add(t);
-                                    }
-                                });
+                                addTextToTab(result);
                             }
                             buffer.flip();
                         }

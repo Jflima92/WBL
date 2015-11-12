@@ -80,7 +80,6 @@ public class Server {
 
                     }
                     if (key.isReadable() & key.isValid()) {
-                        //System.out.println("Readable");
                         String received = readMessage(key);
 
                         rec = received;
