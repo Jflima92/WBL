@@ -4,6 +4,8 @@ import chatter.client.Client;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
+import javafx.event.Event;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
@@ -48,6 +50,8 @@ public class chatController implements Initializable {
     private Tab genTab;
 
     @FXML
+    private ScrollPane tabScroll;
+    @FXML
     private VBox onlineMembers;
 
     @FXML
@@ -66,12 +70,12 @@ public class chatController implements Initializable {
         assert sendMessageButton != null : "fx:id=\"sendMessageButton\" was not injected: check your FXML file 'chatInterface'.";
 
 
-        client = new Client(port, "152.66.175.216");
-       /* try {
+//        client = new Client(port, "152.66.175.216");
+        try {
             client = new Client(port, InetAddress.getLocalHost().getHostAddress());
         } catch (UnknownHostException e) {
             e.printStackTrace();
-        }*/
+        }
         client.connectToServer();
         userName = getRandomUserName();
         userList = new ArrayList<>();
@@ -93,7 +97,7 @@ public class chatController implements Initializable {
             }
         });
 
-
+        genTab.setOnSelectionChanged(arg0 -> tabScroll.setVvalue(1.0));
 
         sendMessageButton.setOnAction(this::handleButtonAction);
 
@@ -130,14 +134,18 @@ public class chatController implements Initializable {
 
         Platform.runLater(() -> {
             onlineMembers.getChildren().remove(name);
-            onlineMembers.getChildren().clear();
-            addNewUser(userName, true);
-            for(int i = 0; i < userList.size(); i++){
-                String name1 = userList.get(i);
-                if(!userName.equals(userList.get(i)))
-                    addNewUser(name1, false);
-            }
+            updateUserList();
         });
+    }
+
+    public void updateUserList(){
+        onlineMembers.getChildren().clear();
+        addNewUser(userName, true);
+        for(int i = 0; i < userList.size(); i++){
+            String name1 = userList.get(i);
+            if(!userName.equals(userList.get(i)))
+                addNewUser(name1, false);
+        }
     }
 
     public void addTextToTab(String text, Boolean admin){
@@ -155,6 +163,7 @@ public class chatController implements Initializable {
             else
                 t.setFill(Color.WHITE);
             genVBox.getChildren().add(t);
+            tabScroll.setVvalue(1.0);
         });
     }
 
@@ -170,7 +179,7 @@ public class chatController implements Initializable {
                     while (active) {
                         while ((nBytes = client.clientSocket.read(buffer)) > 0) {
                             buffer.flip();
-                            Charset charset = Charset.forName("us-ascii");
+                            Charset charset = Charset.forName("UTF-8");
                             CharsetDecoder decoder = charset.newDecoder();
                             CharBuffer charBuffer = decoder.decode(buffer);
                             String result = charBuffer.toString();
@@ -191,6 +200,24 @@ public class chatController implements Initializable {
 
                                 addTextToTab(result, true);
                                 removeUser(result.split("\\s+")[2]);
+                            }
+                            else if(result.split("\\s+")[0].equals("Admin:") && result.split("\\s+")[3].equals("changed")){
+
+                                addTextToTab(result, true);
+
+                                String previous = result.split("\\s+")[2];
+
+                                if (previous.equals(userName)) { //TODO with errors
+                                    userName = result.split("\\s+")[7];
+                                    removeUser(previous);
+                                    System.out.println("userlist: " + userList);
+                                }
+
+                                else {
+                                    userList.add(result.split("\\s+")[7]);
+                                    removeUser(previous);
+
+                                }
                             }
 
                             else{
@@ -231,7 +258,7 @@ public class chatController implements Initializable {
         Optional<String> result = dialog.showAndWait();
         result.ifPresent(name -> newNick[0] = name);
         System.out.println(newNick[0]);
-        String join = "joining " + newNick[0];
+        String join = "changing " + newNick[0];
         client.writeMessage(join);
 
     }

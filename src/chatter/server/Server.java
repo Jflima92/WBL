@@ -41,8 +41,8 @@ public class Server {
         selector = Selector.open();
         serverSocket = ServerSocketChannel.open();
         serverSocket.configureBlocking(false);
-        InetAddress ia = InetAddress.getByName("152.66.175.216"); // Currently running on localhost, change later
-//        InetAddress ia = InetAddress.getLocalHost();
+//        InetAddress ia = InetAddress.getByName("152.66.175.216"); // Currently running on localhost, change later
+        InetAddress ia = InetAddress.getLocalHost();
         InetSocketAddress isa = new InetSocketAddress(ia, port);
         serverSocket.socket().bind(isa);
         System.out.println("Initialized Server on " + ia.getHostName());
@@ -95,7 +95,14 @@ public class Server {
                             clientsNames.put((SocketChannel) key.channel(), received.toString().split("\\s+")[1]);
                             broadcastMessage(clients, prepareAllUsers(clientsNames, clients));
 
-                        } else
+                        } else if(received.toString().split("\\s+")[0].equals("changing")) {
+                            String previous = clientsNames.get((SocketChannel) key.channel());
+
+                            clientsNames.put((SocketChannel) key.channel(), received.toString().split("\\s+")[1]);
+
+                            broadcastMessage(clients, "Admin: User " + previous + " changed is nickname to " + received.toString().split("\\s+")[1]);
+
+                        }  else
                         {
                             System.out.println("received: " + received.toString());
                             broadcast = true;
