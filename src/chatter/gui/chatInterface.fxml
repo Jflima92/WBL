@@ -28,7 +28,7 @@
           </Menu>
           <Menu mnemonicParsing="false" text="Options">
             <items>
-              <MenuItem mnemonicParsing="false" text="Change Nickname" />
+              <MenuItem fx:id="changeNickname" mnemonicParsing="false" text="Change Nickname" />
             </items>
           </Menu>
           <Menu mnemonicParsing="false" text="Help">

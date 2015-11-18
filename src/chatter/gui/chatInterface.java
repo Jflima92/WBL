@@ -21,6 +21,8 @@ public class chatInterface extends Application {
     public void start(Stage primaryStage) throws Exception {
         this.primaryStage = primaryStage;
         this.primaryStage.setTitle("Chatter");
+        this.primaryStage.setResizable(false);
+        this.primaryStage.sizeToScene();
 
         FXMLLoader loader = new FXMLLoader(getClass().getResource("chatInterface.fxml"));
         Parent root = loader.load();

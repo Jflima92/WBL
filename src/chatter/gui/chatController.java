@@ -5,27 +5,28 @@ import javafx.application.Platform;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
-import javafx.scene.control.Button;
-import javafx.scene.control.Tab;
-import javafx.scene.control.TextField;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.URL;
+import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.ResourceBundle;
-import java.util.UUID;
+import java.util.*;
 
 
 /**
@@ -49,7 +50,10 @@ public class chatController implements Initializable {
     @FXML
     private VBox onlineMembers;
 
+    @FXML
+    private MenuItem changeNickname;
 
+    private TextInputDialog dialog = new TextInputDialog("itsamemario");
     private int port = 1818;
     private Client client;
     public boolean active = true;
@@ -62,8 +66,12 @@ public class chatController implements Initializable {
         assert sendMessageButton != null : "fx:id=\"sendMessageButton\" was not injected: check your FXML file 'chatInterface'.";
 
 
-        client = new Client(port, "192.168.1.229");
-
+        client = new Client(port, "152.66.175.216");
+       /* try {
+            client = new Client(port, InetAddress.getLocalHost().getHostAddress());
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
+        }*/
         client.connectToServer();
         userName = getRandomUserName();
         userList = new ArrayList<>();
@@ -85,7 +93,11 @@ public class chatController implements Initializable {
             }
         });
 
+
+
         sendMessageButton.setOnAction(this::handleButtonAction);
+
+        changeNickname.setOnAction(this::handleChangeNickname);
 
     }
 
@@ -207,6 +219,21 @@ public class chatController implements Initializable {
         System.out.println(msg);
         client.writeMessage(msg);
         textBox.clear();
+    }
+
+    private void handleChangeNickname(ActionEvent event) {
+
+        final String[] newNick = {null};
+
+        dialog.setTitle("Chatter");
+        dialog.setHeaderText("Change your Nickname");
+        dialog.setContentText("Please enter your new nick:");
+        Optional<String> result = dialog.showAndWait();
+        result.ifPresent(name -> newNick[0] = name);
+        System.out.println(newNick[0]);
+        String join = "joining " + newNick[0];
+        client.writeMessage(join);
+
     }
 
     public String getRandomUserName(){

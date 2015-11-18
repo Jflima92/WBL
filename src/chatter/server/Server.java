@@ -41,10 +41,11 @@ public class Server {
         selector = Selector.open();
         serverSocket = ServerSocketChannel.open();
         serverSocket.configureBlocking(false);
-        InetAddress ia = InetAddress.getByName("192.168.1.229"); // Currently running on localhost, change later
+        InetAddress ia = InetAddress.getByName("152.66.175.216"); // Currently running on localhost, change later
+//        InetAddress ia = InetAddress.getLocalHost();
         InetSocketAddress isa = new InetSocketAddress(ia, port);
         serverSocket.socket().bind(isa);
-        System.out.println("Initialized Server on " + ia);
+        System.out.println("Initialized Server on " + ia.getHostName());
     }
 
     public String getIpAddress() throws IOException {
