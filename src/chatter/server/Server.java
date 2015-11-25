@@ -19,6 +19,8 @@ import java.util.Set;
 /**
  * Created by jorgelima on 9/30/15.
  */
+
+
 public class Server {
 
     private Selector selector = null;
@@ -28,26 +30,35 @@ public class Server {
     private int port = 1818;
     private HashMap<SocketChannel, String> clientsNames;
 
+    // Constructor of the class Server
     public Server(){
         System.out.println("Server online");
         clients = new ArrayList<>();
         clientsNames = new HashMap<>();
     }
+
+    // (Not used) Other constructor
     public Server(int port){
         this.port = port;
     }
 
+    // Initialization of the server
     public void initializeServer() throws IOException {
+
+        // Opening the proper selector
         selector = Selector.open();
+
+        // Socket server opening and configuration
         serverSocket = ServerSocketChannel.open();
         serverSocket.configureBlocking(false);
-//        InetAddress ia = InetAddress.getByName("152.66.175.216"); // Currently running on localhost, change later
+        //InetAddress ia = InetAddress.getByName("152.66.175.216"); // Currently running on localhost, change later
         InetAddress ia = InetAddress.getLocalHost();
         InetSocketAddress isa = new InetSocketAddress(ia, port);
         serverSocket.socket().bind(isa);
         System.out.println("Initialized Server on " + ia.getHostName());
     }
 
+    // Function that provides the external ip address of the server
     public String getIpAddress() throws IOException {
         URL myIP = new URL("https://api.ipify.org?format=text");
         BufferedReader in = new BufferedReader(
@@ -56,14 +67,18 @@ public class Server {
         return in.readLine();
     }
 
+    // Function that starts the server
     public void startServer() throws IOException{
+
         initializeServer();
+
+        // Registering of the selector on the server socket, so connections can be accepted
         SelectionKey acceptKey = serverSocket.register(selector, SelectionKey.OP_ACCEPT);
 
         Boolean broadcast = false;
-        Boolean newClient = false;
         String rec = null;
 
+        // This while loop verifies whether there are connections, and acts accordingly to the desired action
         while (acceptKey.selector().select() > 0) {
 
             Set readyKeys = selector.selectedKeys();
@@ -73,42 +88,60 @@ public class Server {
                 SelectionKey key = (SelectionKey) it.next();
                 it.remove();
                 try {
+
+                    // When a Client connects, a channel is established between the Client and the Server
                     if (key.isAcceptable()) {
                         System.out.println("Acceptable");
                         ServerSocketChannel ssc = (ServerSocketChannel) key.channel();
                         socket = ssc.accept();
                         socket.configureBlocking(false);
+
+                        // After being accepted, the Client's key is registered for being able to read and write
                         SelectionKey another = socket.register(selector, SelectionKey.OP_READ | SelectionKey.OP_WRITE);
                         clients.add(socket);
 
                     }
+
+                    // Handling of a received message
                     if (key.isReadable() & key.isValid()) {
                         String received = readMessage(key);
 
                         rec = received;
 
+                        // Handling of a user disconnection
                         if (received.toString() == "noconn") {
                             System.out.println("Client disconnected: " + clientsNames.get(key.channel()));
                             broadcastMessage(clients, "Admin: User " + clientsNames.get(key.channel()) + " has disconnected.");
                             clientsNames.remove(key.channel());
-                        } else if(received.toString().split("\\s+")[0].equals("joining")) {
+                        }
+
+                        // Handling of a user joining
+                        else if(received.toString().split("\\s+")[0].equals("joining")) {
                             clientsNames.put((SocketChannel) key.channel(), received.toString().split("\\s+")[1]);
                             broadcastMessage(clients, prepareAllUsers(clientsNames, clients));
 
-                        } else if(received.toString().split("\\s+")[0].equals("changing")) {
+                        }
+
+                        //Handling a user changing his nickname
+                        else if(received.toString().split("\\s+")[0].equals("changing")) {
                             String previous = clientsNames.get((SocketChannel) key.channel());
 
                             clientsNames.put((SocketChannel) key.channel(), received.toString().split("\\s+")[1]);
 
                             broadcastMessage(clients, "Admin: User " + previous + " changed is nickname to " + received.toString().split("\\s+")[1]);
 
-                        }  else
+                        }
+
+                        //handling a message broadcasting
+                        else
                         {
                             System.out.println("received: " + received.toString());
                             broadcast = true;
                         }
 
                     }
+
+                    // When the broadcast flag is set as true, the Server emits a message to all clients connected
                     if (key.isWritable() & key.isValid()) {
                         //System.out.println("Writable");
 
@@ -130,6 +163,7 @@ public class Server {
         }
     }
 
+    // String preparation containing all the users connected
     public String prepareAllUsers(HashMap<SocketChannel, String> socketToName, ArrayList<SocketChannel> sockets){
 
         String users = "users ";
@@ -140,6 +174,7 @@ public class Server {
         return users;
     }
 
+    // Function that sends a message to all connected clients
     public void broadcastMessage(ArrayList<SocketChannel> sockets, String message){
 
         for (SocketChannel cli : sockets) {
@@ -165,6 +200,8 @@ public class Server {
 
     }
 
+
+    // Function that writes a message to the client
     public void writeMessage(SocketChannel socket, String ret) {
 
 
@@ -192,6 +229,8 @@ public class Server {
 
     }
 
+
+    // Function the handles the message receive
     public String readMessage(SelectionKey key){
         int nBytes = 0;
         socket = (SocketChannel) key.channel();

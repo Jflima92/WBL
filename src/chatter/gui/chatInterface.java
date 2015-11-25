@@ -17,6 +17,8 @@ public class chatInterface extends Application {
         launch(args);
     }
 
+    //This class has the start method for the javafx application, setting all the proper variables and instatiating the used controller
+
     @Override
     public void start(Stage primaryStage) throws Exception {
         this.primaryStage = primaryStage;
@@ -33,7 +35,7 @@ public class chatInterface extends Application {
 
         controller.setStage(this.primaryStage);
 
-        primaryStage.setOnCloseRequest(e -> {              //TODO fix issue of disconnecting socket on window close
+        primaryStage.setOnCloseRequest(e -> {
             try {
                 controller.disconnect();
                 Platform.exit();

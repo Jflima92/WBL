@@ -1,12 +1,12 @@
 package chatter.jUnit;
 
-import static org.junit.Assert.assertEquals;
+import chatter.xmlParser.CheckXMLFile;
+import org.junit.Test;
 
 import java.io.IOException;
 import java.util.Date;
 
-import org.junit.Test;
-import chatter.xmlParser.CheckXMLFile;
+import static org.junit.Assert.assertEquals;
 
 public class LogTest {
 	

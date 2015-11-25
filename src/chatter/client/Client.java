@@ -10,19 +10,30 @@ import java.nio.channels.SocketChannel;
  */
 public class Client {
 
+    // Server port
     private int port;
+
+    //Server Address
     private String address;
+
+    //SocketChannel used for the connection
     public SocketChannel clientSocket;
+
+    // Variable that will contain the information needed for connection
     private InetSocketAddress isa;
 
+
+    // Client Constructor
     public Client(int port, String address){
         this.address = address;
         this.port = port;
 
     }
 
+    // Function that connects the client to the given Server
     public void connectToServer(){
         int result = 0;
+
         try{
             clientSocket = SocketChannel.open();
             isa = new InetSocketAddress(address,port);
@@ -37,6 +48,7 @@ public class Client {
 
     }
 
+    // Function that sends a given message to the Server
     public void writeMessage(String msg){
 
         ByteBuffer bytebuf = ByteBuffer.allocate(1024);
@@ -51,7 +63,7 @@ public class Client {
         }
     }
 
-
+    // Function that shuts down and disconnects the Client from the Server
     public void shutdown(){
 
         try {
